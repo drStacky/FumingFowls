@@ -24,7 +24,7 @@ void setup() { //<>//
   // Accumulator will hold roundoff error to ensure steady motion regardless of framerate
   accumulator = 0;
   frameStart = 0;
-  gravity = 0.0;
+  gravity = 0.1;
   
   myBodies = new ArrayList<Body>();
   // Initial Circle
@@ -33,17 +33,28 @@ void setup() { //<>//
   //  myBodies.add( new Body(new Circle(), gravity, new PVe      qwwetrtyuiop[p]0\ctor(random(-5,5),random(-5)) ) );
   //}
   
-  //// Initial rectangles
-  //for(int i=0; i<10; i++) {
-  //  myBodies.add( new Body(new Rectangle((int) random(20,30), (int) random(20,30)),
-  //                         gravity, new PVector(random(-5,5),random(-5)) ) );
-  //}
+  // Initial rectangles
+  for(int i=0; i<10; i++) {
+    myBodies.add( new Body(new Rectangle((int) random(20,30), (int) random(20,30)),
+                           gravity, new PVector(random(-5,5),random(-5)) ) );
+  }
   
-  myBodies.add( new Body(new Rectangle(40, 40, 0, height/4),
-                         gravity, new PVector(3,0) ) );
-
-  myBodies.add( new Body(new Rectangle(60, 60, width, height/4-10),
-                         gravity, new PVector(-2,0) ) );
+  //// Vertical boxes
+  //myBodies.add( new Body(new Rectangle(100, 100, width / 2, 0),
+  //                       gravity, new PVector(0,6) ) );
+  //myBodies.add( new Body(new Rectangle(100, 20, width / 2 + 50, height),
+  //                       gravity, new PVector(0,-6) ) );
+  
+  //myBodies.add( new Body(new Circle( width / 4, 0 / 4, 30),
+  //                       gravity, new PVector(0,6) ) );
+  //myBodies.add( new Body(new Circle( width / 4,height, 40),
+  //                       gravity, new PVector(0,-6) ) );
+  
+  //// Horizontal boxes
+  //myBodies.add( new Body(new Rectangle(100, 100, 0, height / 2),
+  //                       gravity, new PVector(5,0) ) );
+  //myBodies.add( new Body(new Rectangle(20, 100, width, height / 2+30),
+  //                       gravity, new PVector(-5,0) ) );
   
   myBP = new BroadPhase();
 }
@@ -91,16 +102,16 @@ void resolveImpulses() {
     }
   }
   
+
   // check and resolve collisions
   for(Pair pair: myBP.bpPairs) {
     if( pair.A.shape.isCircle() && pair.B.shape.isCircle()) {
-      Collision.circleVsCircle(pair);
+      if(Collision.circleVsCircle(pair)) Collision.resolveCollision(pair);
     }
-    if( pair.A.shape.isRectangle() && pair.B.shape.isRectangle()) {
-      Collision.RectVsRect(pair);
+    else if( pair.A.shape.isRectangle() && pair.B.shape.isRectangle()) {
+      if(Collision.RectVsRect(pair)) Collision.resolveCollision(pair);
     }
     
-    Collision.resolveCollision(pair);
   }
   
   // Move forward one time step

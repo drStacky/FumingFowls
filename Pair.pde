@@ -25,6 +25,10 @@ class Pair {
     penetration = p;
   }
   
+  float getPenetration() {
+    return penetration;
+  }
+  
   void setNormal(PVector n) {
     normal = n;
   }

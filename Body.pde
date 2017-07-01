@@ -6,7 +6,7 @@ class Body {
   Material material;
   MassData massData;
   PVector velocity;
-  PVector force = new PVector(0,1);;
+  PVector force = new PVector(0,1);
   
   Body(Shape s) {
     shape = s;
@@ -85,7 +85,7 @@ class Body {
     shape.setPos(vec);
   }
   
-  String getShape() {
-    return shape.getClass().toString();
+  Shape getShape() {
+    return shape;
   }
 }
