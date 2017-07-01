@@ -26,42 +26,21 @@ void setup() { //<>//
   frameStart = 0;
   gravity = 0.1;
   
-  myBodies = new ArrayList<Body>();
-  // Initial Circle
-  //// Note that gravity is in the positive y direction because that is down on the screen
-  //for(int i=0; i<10; i++) {
-  //  myBodies.add( new Body(new Circle(), gravity, new PVe      qwwetrtyuiop[p]0\ctor(random(-5,5),random(-5)) ) );
-  //}
-  
-  // Initial rectangles
-  for(int i=0; i<10; i++) {
-    myBodies.add( new Body(new Rectangle((int) random(20,30), (int) random(20,30)),
-                           gravity, new PVector(random(-5,5),random(-5)) ) );
-  }
-  
-  //// Vertical boxes
-  //myBodies.add( new Body(new Rectangle(100, 100, width / 2, 0),
-  //                       gravity, new PVector(0,6) ) );
-  //myBodies.add( new Body(new Rectangle(100, 20, width / 2 + 50, height),
-  //                       gravity, new PVector(0,-6) ) );
-  
-  //myBodies.add( new Body(new Circle( width / 4, 0 / 4, 30),
-  //                       gravity, new PVector(0,6) ) );
-  //myBodies.add( new Body(new Circle( width / 4,height, 40),
-  //                       gravity, new PVector(0,-6) ) );
-  
-  //// Horizontal boxes
-  //myBodies.add( new Body(new Rectangle(100, 100, 0, height / 2),
-  //                       gravity, new PVector(5,0) ) );
-  //myBodies.add( new Body(new Rectangle(20, 100, width, height / 2+30),
-  //                       gravity, new PVector(-5,0) ) );
-  
+  myBodies = new ArrayList<Body>();  
   myBP = new BroadPhase();
 }
 
 
 void draw() { //<>//
   background(255);
+  // Instructions
+  fill(0);
+  text("'0' = reset", 10, 30);
+  text("left click = circle", 10, 45); 
+  text("right click = rectangle", 10, 60); 
+  text("'c' = spray of circles", 10, 75); 
+  text("'r' = spray of rectangles", 10, 90); 
+  
   accumulator += millis() - frameStart;
   frameStart = millis();
   
@@ -140,4 +119,26 @@ void mousePressed() {
     myBodies.add( new Body(new Rectangle(20, 30, mouseX, mouseY),
                       gravity, new PVector(random(-5,5),random(-5)) ) );
   }
+}
+
+void keyPressed() {
+  if(key == '0') {
+    // Clear objects from screen
+    myBodies.clear();
+  }
+  else if(key == 'r') {
+    // Initial rectangles
+    for(int i=0; i<10; i++) {
+      myBodies.add( new Body(new Rectangle((int) random(20,30), (int) random(20,30)),
+                             gravity, new PVector(random(-5,5),random(-5)) ) );
+    }    
+  }
+  else if(key == 'c') {
+     //Initial Circle
+    for(int i=0; i<10; i++) {
+      myBodies.add( new Body(new Circle(), gravity, new PVector(random(-5,5),random(-5)) ) );
+    }    
+  }
+  
+  
 }
