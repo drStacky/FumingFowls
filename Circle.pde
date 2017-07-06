@@ -18,7 +18,7 @@ class Circle extends Shape{
     computeAABB();
   }
   
-  Circle(int x, int y, int rad) {
+  Circle( int rad, int x, int y) {
     r = rad;
     pos = new PVector(x, y);
     area = PI*r*r;
@@ -57,8 +57,8 @@ class Circle extends Shape{
   boolean isCircle() {
     return true;
   }
-
-  boolean isRectangle() {
-    return false;
+  
+  PVector getCenter() {
+    return pos.copy();
   }
 }

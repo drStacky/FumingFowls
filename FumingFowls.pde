@@ -26,7 +26,9 @@ void setup() { //<>//
   frameStart = 0;
   gravity = 0.1;
   
-  myBodies = new ArrayList<Body>();  
+  
+  
+  myBodies = new ArrayList<Body>();
   myBP = new BroadPhase();
 }
 
@@ -35,11 +37,13 @@ void draw() { //<>//
   background(255);
   // Instructions
   fill(0);
-  text("'0' = reset", 10, 30);
+  text("'0' = clear", 10, 30);
   text("left click = circle", 10, 45); 
   text("right click = rectangle", 10, 60); 
   text("'c' = spray of circles", 10, 75); 
   text("'r' = spray of rectangles", 10, 90); 
+  
+  rect(0, 9*height/10, width, height/10);
   
   accumulator += millis() - frameStart;
   frameStart = millis();
@@ -74,8 +78,13 @@ void resolveImpulses() {
     for(int j=i+1; j<myBodies.size(); j++) {
       body2 = myBodies.get(j);
       if( !body1.equals(body2) ) {
+        // If AABB intersect, add to broadphase array
         if( myBP.AABBtoAABB(body1, body2) ) {
-          myBP.bpPairs.add( new Pair(body1, body2) );
+          Pair p = new Pair(body1, body2);
+          
+          // TODO Make positionalCorrection work properly
+          //Collision.positionalCorrection(p);
+          myBP.bpPairs.add( p );
         }
       }
     }
@@ -84,11 +93,17 @@ void resolveImpulses() {
 
   // check and resolve collisions
   for(Pair pair: myBP.bpPairs) {
-    if( pair.A.shape.isCircle() && pair.B.shape.isCircle()) {
+    boolean aCircle = pair.A.shape.isCircle();
+    boolean bCircle = pair.B.shape.isCircle();
+    
+    if( aCircle && bCircle) {
       if(Collision.circleVsCircle(pair)) Collision.resolveCollision(pair);
     }
-    else if( pair.A.shape.isRectangle() && pair.B.shape.isRectangle()) {
-      if(Collision.RectVsRect(pair)) Collision.resolveCollision(pair);
+    else if( !aCircle && !bCircle) {
+      if(Collision.rectVsRect(pair)) Collision.resolveCollision(pair);
+    }
+    else if( (!aCircle && bCircle) || (aCircle && !bCircle) ) {
+      if(Collision.circleVsRect(pair)) Collision.resolveCollision(pair);
     }
     
   }
@@ -112,7 +127,7 @@ void render() {
 void mousePressed() {
   if(mouseButton == LEFT) {
     float r = random(5,15);
-    myBodies.add( new Body(new Circle(mouseX, mouseY, int(r)),
+    myBodies.add( new Body(new Circle(int(r), mouseX, mouseY),
                       gravity, new PVector(random(-5,5),random(-5)) ) );
   }
   if(mouseButton == RIGHT) {
@@ -127,17 +142,27 @@ void keyPressed() {
     myBodies.clear();
   }
   else if(key == 'r') {
-    // Initial rectangles
+    // Initial "spray" of rectangles
     for(int i=0; i<10; i++) {
       myBodies.add( new Body(new Rectangle((int) random(20,30), (int) random(20,30)),
                              gravity, new PVector(random(-5,5),random(-5)) ) );
     }    
   }
   else if(key == 'c') {
-     //Initial Circle
+     //Initial "spray" of circles
     for(int i=0; i<10; i++) {
-      myBodies.add( new Body(new Circle(), gravity, new PVector(random(-5,5),random(-5)) ) );
+      myBodies.add( new Body(new Circle((int) random(5,15)), gravity, new PVector(random(-5,5),random(-5)) ) );
     }    
+  }
+  else if(key == '1') {
+    // Reset test case 1
+    myBodies.add( new Body(new Rectangle(40, 50, width / 2 - 20, height), gravity, new PVector(0, -20) ) );
+    myBodies.add( new Body(new Circle(30, width / 2, 0), gravity, new PVector(0, 0) ) );  
+  }
+  else if(key == '2') {
+    // Reset test case 1
+    myBodies.add( new Body(new Rectangle(40, 50, width / 2 - 20, 0), gravity, new PVector(0, 0) ) );
+    myBodies.add( new Body(new Circle(30, width / 2, 9*height/10), gravity, new PVector(0, -15) ) );  
   }
   
   

@@ -75,8 +75,8 @@ class Rectangle extends Shape {
   boolean isCircle() {
     return false;
   }
-
-  boolean isRectangle() {
-    return true;
+  
+  PVector getCenter() {
+    return pos.copy().add( new PVector(w/2, h/2) );
   }
 }

@@ -21,8 +21,6 @@ final static class Collision {
     PVector impulse = p.getNormal().mult(j);
     p.A.addToVelocity( impulse.copy().mult(-p.A.massData.invMass) );
     p.B.addToVelocity( impulse.copy().mult(p.B.massData.invMass) );
-    
-    //positionalCorrection(p);
   }
   
   static boolean circleVsCircle(Pair p) {
@@ -53,13 +51,13 @@ final static class Collision {
     return true;
   }
   
-  static boolean RectVsRect( Pair p ) {
+  static boolean rectVsRect( Pair p ) {
     
     Rectangle A = (Rectangle) p.A.shape;
     Rectangle B = (Rectangle) p.B.shape;
     
-    PVector Acenter = A.getPos().add(new PVector(A.w/2,A.h/2));
-    PVector Bcenter = B.getPos().add(new PVector(B.w/2,B.h/2));
+    PVector Acenter = A.getCenter();
+    PVector Bcenter = B.getCenter();
     
     PVector n = Bcenter.sub(Acenter);
     
@@ -67,32 +65,32 @@ final static class Collision {
     //AABB bbox = p.B.getShape().getAABB();
     
     // Calculate half extents along x axis for each object
-    float a_extent = (A.w) / 2;
-    float b_extent = (B.w) / 2;
+    float aExtent = (A.w) / 2;
+    float bExtent = (B.w) / 2;
     
     // Calculate overlap on x axis
-    float x_overlap = a_extent + b_extent - abs( n.x );
+    float xOverlap = aExtent + bExtent - abs( n.x );
     
     // SAT test on x axis
-    if(x_overlap >= 0) {
+    if(xOverlap >= 0) {
       // Calculate half extents along y axis for each object
-      a_extent = (A.h) / 2;
-      b_extent = (B.h) / 2;
+      aExtent = (A.h) / 2;
+      bExtent = (B.h) / 2;
     
       // Calculate overlap on y axis
-      float y_overlap = a_extent + b_extent - abs( n.y );
+      float yOverlap = aExtent + bExtent - abs( n.y );
       
       // SAT test on y axis
-      if(y_overlap >= 0) {
+      if(yOverlap >= 0) {
         // Find out which axis is axis of least penetration
-        if(x_overlap < y_overlap) {
+        if(xOverlap < yOverlap) {
           // Point towards B knowing that n points from A to B
           if(n.x < 0) {
             p.setNormal( new PVector(-1,0) );
           } else {
             p.setNormal( new PVector(1,0) );
           }
-          p.setPenetration(x_overlap);
+          p.setPenetration(xOverlap);
         } else {
           // Point toward B knowing that n points from A to B
           if(n.y < 0) {
@@ -100,7 +98,7 @@ final static class Collision {
           } else {
             p.setNormal( new PVector(0,1) );
           }
-          p.setPenetration( y_overlap );
+          p.setPenetration( yOverlap );
         }
         return true;
       }
@@ -108,94 +106,107 @@ final static class Collision {
 
     return false;
   }
-  
-  //static boolean isSeparate(Pair p) {
-  //  Rectangle A = (Rectangle) p.A.shape;
-  //  Rectangle B = (Rectangle) p.B.shape;
-  //  ArrayList<PVector> aCorners = A.getCorners();
-  //  ArrayList<PVector> bCorners = B.getCorners();
-    
-  //  /*
-  //    Separating Axis Theorem (SAT) says that if two polygons (2D or 3D) are not overlapping,
-  //  then there's a line whose orthogonal complement separates those polygons. It's sufficient
-  //  to check the lines parallel to the normals of the sides.
-  //  */
-  //  ArrayList<PVector> aNormals = getNormals( aCorners );
-  //  ArrayList<PVector> bNormals = getNormals( bCorners );
-    
-  //  float aMax, aMin, bMax, bMin;
-  //  float maxPenetration = 0;
-  //  PVector normalPenetration = new PVector();
-  //  ArrayList<PVector> normals = new ArrayList();
-  //  normals.addAll(aNormals);
-  //  normals.addAll(bNormals);
-    
-  //  for(PVector normal: normals) {
-  //    // Reset max and mins
-  //    aMax = 0;
-  //    aMin = 0;
-  //    bMax = 0;
-  //    bMin = 0;
-      
-  //    // Find the maximum and minimum projections* onto normal axis
-  //    // *Normal is not unit vector, so technically scalar of projections
-  //    for(PVector corner: aCorners) {
-  //      aMax = max(aMax, corner.dot(normal));
-  //      aMin = min(aMin, corner.dot(normal));
-  //    }
-  //    for(PVector corner: bCorners) {
-  //      bMax = max(bMax, corner.dot(normal));
-  //      bMin = min(bMin, corner.dot(normal));
-  //    }
-  //    // If shapes don't overlap (negative penetration) on this axis, shapes are separate
-  //    float penetration = max(aMax - bMin, bMax - aMin);
-  //    if( penetration < 0 ) {
-  //      return true;
-  //    }
-  //    maxPenetration = max( maxPenetration, penetration);
-  //    // Need normal to determine direction of impulse if colliding
-  //    if( penetration == maxPenetration ) {
-  //      normalPenetration = normal.copy();
-  //    }
-  //  }
-    
-  //  // Overlap from all angles, so not separate
-  //  float pen = -maxPenetration / (normalPenetration.x*normalPenetration.x + normalPenetration.y*normalPenetration.y);
-    
-  //  // !!!!!!!!!!!!!!!!!!!! pen or maxPenetration???
-  //  p.setPenetration( -maxPenetration );
-  //  p.setNormal(normalPenetration.normalize().mult(-1));
-    
-  //  return false;
-  //}
 
-  static ArrayList<PVector> getNormals( ArrayList<PVector> corners ) {
-    ArrayList<PVector> normals = new ArrayList();
-    int n = corners.size();
-    PVector temp;
+  // Never returns false. Need to check if intersection happens
+  // Probably has same issue as I had with rectVsRect: Rect position from upper left, not center
+  static boolean circleVsRect( Pair p ) {
     
-    // Go around the shape and include 
-    for(int i=0; i<n-1; i++) {
-      // Temp will be tangent to the side
-      temp = corners.get(i+1).copy().sub( corners.get(i) );
-      // Reversing the coordinates and making one negative will give a normal vector
-      normals.add( new PVector(-temp.y, temp.x) );
+    Body A, B;
+    
+    // Make sure our A is rectangle and B is circle
+    if (p.A.shape.isCircle()) {
+      B = p.A;
+      A = p.B;
+    } else {
+      A = p.A;
+      B = p.B; 
     }
-    // Last side is a special case
-    temp = corners.get(0).copy().sub( corners.get(n-1) );
-    normals.add( new PVector(-temp.y, temp.x) );
+ 
+    // Vector from A to B
+    PVector n = B.shape.getCenter().sub( A.shape.getCenter() );
+   
+    // Closest point on A to center of B
+    PVector closest = n.copy();
     
-    return normals;
+    // Calculate half extents along each axis
+    float xExtent = (A.shape.getAABB().max.x - A.shape.getAABB().min.x) / 2;
+    float yExtent = (A.shape.getAABB().max.y - A.shape.getAABB().min.y) / 2;
+    
+    // Clamp point to edges of the AABB
+    closest.x = constrain( closest.x, -xExtent, xExtent );
+    closest.y = constrain( closest.y, -yExtent, yExtent );
+    
+    boolean inside = false;
+    
+    // Circle is inside the AABB, so we need to clamp the circle's center
+    // to the closest edge
+    if(n.equals(closest) )
+    {
+      inside = true;
+   
+      // Find closest axis
+      if(abs( n.x ) > abs( n.y ))
+      {
+        // Clamp to closest extent
+        if(closest.x > 0)
+          closest.x = xExtent;
+        else
+          closest.x = -xExtent;
+      }
+   
+      // y axis is shorter
+      else
+      {
+        // Clamp to closest extent
+        if(closest.y > 0)
+          closest.y = yExtent;
+        else
+          closest.y = -yExtent;
+      }
+    }
+    
+    PVector normal = n.copy().sub(closest);
+    float d = normal.magSq( );
+    Circle bCirc = (Circle) B.shape;
+    float r = bCirc.r;
+    
+    // Early out of the radius is shorter than distance to closest point and
+    // Circle not inside the AABB
+    if(d > r * r && !inside)
+      return false;
+   
+    // Avoided sqrt until we needed
+    d = sqrt( d );
+   
+    // Collision normal needs to be flipped to point outside if circle was
+    // inside the AABB
+    if(inside)
+    {
+      p.setNormal(n.mult(-1).normalize());
+    }
+    else
+    {
+      p.setNormal(n.normalize());
+    }
+    p.setPenetration(r - d);
+    
+    return true;
   }
 
-  // Used to prevent objects from sinking into one another
-  // Someting isn't working right here
+
+  // Used to prevent objects from sinking into one another due to roundoff error
+  // Sinking still occurring, so something is wrong here
   static void positionalCorrection(Pair p) {
     final float percent = 0.2;
     final float slop = 0.01;
-    PVector correction = p.getNormal().mult( percent * max(p.getPenetration()-slop, 0.0) / (p.A.massData.invMass + p.B.massData.invMass) );
     
-    p.A.setPos( p.A.getPos().sub( correction.copy().mult(p.A.massData.invMass) ) );
-    p.B.setPos( p.B.getPos().add( correction.copy().mult(p.B.massData.invMass) ) );
+    float aiMass = p.A.massData.invMass;
+    float biMass = p.B.massData.invMass;
+    
+    float scalar = max(p.getPenetration() - slop, 0.0) * percent / (aiMass + biMass);
+    PVector correction = p.getNormal().mult( scalar );
+    
+    p.A.setPos( p.A.getPos().sub( correction.copy().mult(aiMass) ) );
+    p.B.setPos( p.B.getPos().add( correction.copy().mult(biMass) ) );
   }
 }

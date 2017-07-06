@@ -67,8 +67,8 @@ class Body {
       shape.setPos( new PVector(x,0) );
       velocity.y *= -material.restitution;
     }
-    if (y >= height) {
-      shape.setPos( new PVector(x,height) );
+    if (y >= 9*height/10) {
+      shape.setPos( new PVector(x,9*height/10) );
       velocity.y *= -material.restitution;
     }
   }
