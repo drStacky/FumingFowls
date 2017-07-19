@@ -17,5 +17,4 @@ abstract class Shape {
   abstract void setPos(PVector p);
   abstract float getArea();
   abstract boolean isCircle();
-  abstract PVector getCenter();
 }

@@ -56,13 +56,7 @@ final static class Collision {
     Rectangle A = (Rectangle) p.A.shape;
     Rectangle B = (Rectangle) p.B.shape;
     
-    PVector Acenter = A.getCenter();
-    PVector Bcenter = B.getCenter();
-    
-    PVector n = Bcenter.sub(Acenter);
-    
-    //AABB abox = p.A.getShape().getAABB();
-    //AABB bbox = p.B.getShape().getAABB();
+    PVector n = B.getPos().sub(A.getPos());
     
     // Calculate half extents along x axis for each object
     float aExtent = (A.w) / 2;
@@ -107,8 +101,7 @@ final static class Collision {
     return false;
   }
 
-  // Never returns false. Need to check if intersection happens
-  // Probably has same issue as I had with rectVsRect: Rect position from upper left, not center
+
   static boolean circleVsRect( Pair p ) {
     
     Body A, B;
@@ -119,11 +112,11 @@ final static class Collision {
       A = p.B;
     } else {
       A = p.A;
-      B = p.B; 
+      B = p.B;
     }
  
     // Vector from A to B
-    PVector n = B.shape.getCenter().sub( A.shape.getCenter() );
+    PVector n = B.shape.getPos().sub( A.shape.getPos() );
    
     // Closest point on A to center of B
     PVector closest = n.copy();
@@ -138,7 +131,9 @@ final static class Collision {
     
     boolean inside = false;
     
-    // Circle is inside the AABB, so we need to clamp the circle's center
+    
+    // vvvv This if-statement is what I don't understand right now vvvvv
+    // Circle center is inside the AABB, so we need to constrain the circle's center
     // to the closest edge
     if(n.equals(closest) )
     {
@@ -153,11 +148,10 @@ final static class Collision {
         else
           closest.x = -xExtent;
       }
-   
-      // y axis is shorter
+      // y axis is shorter (longer??)
       else
       {
-        // Clamp to closest extent
+        // Constrain to closest extent
         if(closest.y > 0)
           closest.y = yExtent;
         else
@@ -170,7 +164,7 @@ final static class Collision {
     Circle bCirc = (Circle) B.shape;
     float r = bCirc.r;
     
-    // Early out of the radius is shorter than distance to closest point and
+    // Early out if the radius is shorter than distance to closest point and
     // Circle not inside the AABB
     if(d > r * r && !inside)
       return false;
@@ -182,7 +176,7 @@ final static class Collision {
     // inside the AABB
     if(inside)
     {
-      p.setNormal(n.mult(-1).normalize());
+      p.setNormal(n.normalize().mult(-1));
     }
     else
     {

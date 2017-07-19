@@ -1,5 +1,5 @@
 class Rectangle extends Shape {
-  PVector pos;
+  PVector pos; // Center of rectangle
   float area;
   int w, h;
   AABB aabb;
@@ -31,26 +31,13 @@ class Rectangle extends Shape {
   // This assumes axes of ellipse are parallel to screen sides.
   // Needs to modified if rotations introduced.
   void computeAABB() {
-    PVector upLeft = pos.copy();
-    PVector downRight = pos.copy().add( new PVector(w, h) );
+    PVector upLeft = pos.copy().sub( new PVector(w/2, h/2) );
+    PVector downRight = pos.copy().add( new PVector(w/2, h/2) );
     aabb = new AABB(upLeft, downRight);
   }
   
   AABB getAABB() {
     return aabb.copy();
-  }
-  
-  // Returns a list containing the four corners of the rectangle
-  // Assumes axis aligned
-  ArrayList<PVector> getCorners() {
-    ArrayList<PVector> corners = new ArrayList();
-    
-    corners.add( getPos() );
-    corners.add( getPos().add( new PVector(w, 0) ) );
-    corners.add( getPos().add( new PVector(w, h) ) );
-    corners.add( getPos().add( new PVector(0, h) ) );
-    
-    return corners;
   }
   
   void render() {
@@ -74,9 +61,5 @@ class Rectangle extends Shape {
   
   boolean isCircle() {
     return false;
-  }
-  
-  PVector getCenter() {
-    return pos.copy().add( new PVector(w/2, h/2) );
   }
 }

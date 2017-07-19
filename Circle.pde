@@ -57,8 +57,4 @@ class Circle extends Shape{
   boolean isCircle() {
     return true;
   }
-  
-  PVector getCenter() {
-    return pos.copy();
-  }
 }
