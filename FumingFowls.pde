@@ -15,36 +15,51 @@ ArrayList<Body> myBodies; // Hold all bodies on screen
 BroadPhase myBP; // first pass check for collisions
 Body body1, body2; // temp bodies for broad phase check
 float gravity;
-
+PImage img; // Background image
+int fowlX, fowlY, catX, catY;
+boolean onFowl = false;
+boolean locked = false;
+boolean released = false;
 
 void setup() { //<>//
-  size(500,500);
+  size(1000,500);
   frameRate(30);
   dt = 1.0/frameRate;
+  
   // Accumulator will hold dt error to ensure steady motion regardless of framerate
   accumulator = 0;
   frameStart = 0;
   gravity = 0.03;
   
+  img = loadImage("sky.png"); // Load background image
+  catX = width/5;
+  catY = 3*height/4;
+  fowlX = catX;
+  fowlY = catY;
+  
   rectMode(CENTER); // Processing uses center of rectangles instead of upper left corner  
   
-  myBodies = new ArrayList<Body>();
+  myBodies = new ArrayList<Body>(); // ArrayList of objects that will be moving on screen
   myBP = new BroadPhase();
 }
 
 
 void draw() { //<>//
   background(255);
-  // Instructions
-  fill(0);
-  text("'0' = clear", 10, 30);
-  text("left click = circle", 10, 45); 
-  text("right click = rectangle", 10, 60); 
-  text("'c' = spray of circles", 10, 75); 
-  text("'r' = spray of rectangles", 10, 90);
-  text("'f' = castle", 10, 105);
   
-  rect(width/2, 19*height/20, width, height/10);
+  image(img, 0, 0, width, height);
+  
+  drawInstructions();
+  drawCatapult();
+  
+  if(!released) {
+    fill(255,0,0);
+    stroke(0);
+    strokeWeight(1);
+    ellipse(fowlX, fowlY, 40, 40);
+    strokeWeight(10);
+    line(catX, catY, fowlX, fowlY);
+  }
   
   accumulator += millis() - frameStart;
   frameStart = millis();
@@ -61,8 +76,28 @@ void draw() { //<>//
 }
 
 
+void drawInstructions() {
+  fill(0);
+  text("'0' = clear", 10, 30);
+  text("Click on fowl, hold and pull back", 10, 45); 
+  text("'c' = spray of circles", 10, 60); 
+  text("'r' = spray of rectangles", 10, 75);
+  text("'f' = castle", 10, 90);
+}
 
-
+void drawCatapult() {
+  fill(102,51,0); // Brown
+  noStroke();
+  pushMatrix();
+    translate(width/5, 9*height/10);
+    rect(0, 0, 20, 100);
+    translate(0, -50);
+    rotate(11*PI/6);
+    rect(0, -20, 20, 50);
+    rotate(PI/3);
+    rect(0, -20, 20, 50);
+  popMatrix();
+}
 
 void resolveImpulses() {
   // Get ready to detect new collisions
@@ -124,16 +159,35 @@ void render() {
 }
 
 
-// Add new objects with random velocity at mouse location
 void mousePressed() {
-  if(mouseButton == LEFT) {
-    float r = random(5,15);
-    myBodies.add( new Body(new Circle(int(r), mouseX, mouseY),
-                      gravity, new PVector(random(-.5,.5),random(-.5)) ) );
+  if( (mouseX-fowlX)*(mouseX-fowlX) + (mouseY-fowlY)*(mouseY-fowlY) <= 160 )
+    onFowl = true;
+  else
+    onFowl = false;
+  
+  if( (mouseX-catX)*(mouseX-catX) + (mouseY-catY)*(mouseY-catY) <= 160 ) {
+    locked = true;
   }
-  if(mouseButton == RIGHT) {
-    myBodies.add( new Body(new Rectangle(20, 30, mouseX, mouseY),
-                      gravity, new PVector(random(-.5,.5),random(-.5)) ) );
+}
+
+void mouseReleased() {
+  if(onFowl) {
+    Body fowl = new Body(new Circle(20, fowlX, fowlY), gravity, new PVector(0, 0) );
+    fowl.addToVelocity( new PVector(mouseX-catX, mouseY-catY).mult(-1.0/20) );
+    myBodies.add( fowl );
+  }
+  
+  onFowl = false;
+  locked = false;
+  released = false;
+  fowlX = catX;
+  fowlY = catY;
+}
+
+void mouseDragged() {
+  if(locked) {
+    fowlX = mouseX;
+    fowlY = mouseY;
   }
 }
 
@@ -168,13 +222,13 @@ void keyPressed() {
   else if(key == 'f') {
     // Fuming Fowl Castle
     // Tier 1
-    myBodies.add( new Body(new Rectangle(20, 40, width / 2 - 20, 9*height/10), gravity, new PVector(0, 0) ) );
-    myBodies.add( new Body(new Rectangle(20, 40, width / 2 + 20, 9*height/10), gravity, new PVector(0, 0) ) );
-    myBodies.add( new Body(new Rectangle(60, 20, width / 2, 8*height/10), gravity, new PVector(0, 0) ) );
+    myBodies.add( new Body(new Rectangle(20, 40, 9*width / 10 - 20, 9*height/10), gravity, new PVector(0, 0) ) );
+    myBodies.add( new Body(new Rectangle(20, 40, 9*width / 10 + 20, 9*height/10), gravity, new PVector(0, 0) ) );
+    myBodies.add( new Body(new Rectangle(60, 20, 9*width / 10, 8*height/10), gravity, new PVector(0, 0) ) );
     // Tier 2
-    myBodies.add( new Body(new Rectangle(20, 40, width / 2 - 20, 7*height/10), gravity, new PVector(0, 0) ) );
-    myBodies.add( new Body(new Rectangle(20, 40, width / 2 + 20, 7*height/10), gravity, new PVector(0, 0) ) );
-    myBodies.add( new Body(new Rectangle(60, 20, width / 2, 6*height/10), gravity, new PVector(0, 0) ) );
+    myBodies.add( new Body(new Rectangle(20, 40, 9*width / 10 - 20, 7*height/10), gravity, new PVector(0, 0) ) );
+    myBodies.add( new Body(new Rectangle(20, 40, 9*width / 10 + 20, 7*height/10), gravity, new PVector(0, 0) ) );
+    myBodies.add( new Body(new Rectangle(60, 20, 9*width / 10, 6*height/10), gravity, new PVector(0, 0) ) );
   }
   
 }
